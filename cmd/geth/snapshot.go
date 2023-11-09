@@ -18,8 +18,10 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/ethereum/go-ethereum/core"
 	"os"
 	"path/filepath"
 	"time"
@@ -474,6 +476,12 @@ func traverseState(ctx *cli.Context) error {
 	return nil
 }
 
+var preimagePrefix = []byte("secure-key-")
+
+func preimageKey(hash common.Hash) []byte {
+	return append(preimagePrefix, hash.Bytes()...)
+}
+
 // traverseRawState is a helper function used for pruning verification.
 // Basically it just iterates the trie, ensure all nodes and associated
 // contract codes are present. It's basically identical to traverseState
@@ -522,10 +530,12 @@ func traverseRawState(ctx *cli.Context) error {
 		start      = time.Now()
 	)
 	accIter := t.NodeIterator(nil)
+
+	allocs := make(map[common.Address]core.GenesisAccount)
 	for accIter.Next(true) {
+		alloc := core.GenesisAccount{}
 		nodes += 1
 		node := accIter.Hash()
-
 		if node != (common.Hash{}) {
 			// Check the present for non-empty hash node(embedded node doesn't
 			// have their own hash).
@@ -534,6 +544,7 @@ func traverseRawState(ctx *cli.Context) error {
 				log.Error("Missing trie node(account)", "hash", node)
 				return errors.New("missing account")
 			}
+			//newDB.Put(node.Bytes(), blob, nil)
 		}
 		// If it's a leaf node, yes we are touching an account,
 		// dig into the storage trie further.
@@ -544,6 +555,18 @@ func traverseRawState(ctx *cli.Context) error {
 				log.Error("Invalid account encountered during traversal", "err", err)
 				return errors.New("invalid account")
 			}
+
+			pk := preimageKey(common.BytesToHash(accIter.LeafKey()))
+			addressValue, err := chaindb.Get(pk)
+			if err != nil {
+				log.Error("Invalid account encountered during traversal", "err", err)
+				return errors.New("invalid account")
+			}
+			address := common.BytesToAddress(addressValue)
+
+			alloc.Balance = acc.Balance
+			alloc.Nonce = acc.Nonce
+
 			if acc.Root != emptyRoot {
 				storageTrie, err := trie.NewSecure(acc.Root, triedb)
 				if err != nil {
@@ -551,6 +574,8 @@ func traverseRawState(ctx *cli.Context) error {
 					return errors.New("missing storage trie")
 				}
 				storageIter := storageTrie.NodeIterator(nil)
+				alloc.Storage = make(map[common.Hash]common.Hash)
+
 				for storageIter.Next(true) {
 					nodes += 1
 					node := storageIter.Hash()
@@ -563,10 +588,30 @@ func traverseRawState(ctx *cli.Context) error {
 							log.Error("Missing trie node(storage)", "hash", node)
 							return errors.New("missing storage")
 						}
+						//newDB.Put(node.Bytes(), blob, nil)
 					}
 					// Bump the counter if it's leaf node.
 					if storageIter.Leaf() {
 						slots += 1
+
+						data := storageIter.LeafBlob()
+						var value common.Hash
+						_, content, _, err := rlp.Split(data)
+						if err != nil {
+							log.Error("Invalid storage encountered during traversal", "err", err)
+							return errors.New("invalid storage")
+						}
+						value.SetBytes(content)
+
+						pk := preimageKey(common.BytesToHash(storageIter.LeafKey()))
+						slotKeyValue, err := chaindb.Get(pk)
+						if err != nil {
+							log.Error("Invalid storage encountered during traversal", "err", err)
+							return errors.New("invalid storage")
+						}
+						slotKey := common.BytesToHash(slotKeyValue)
+
+						alloc.Storage[slotKey] = value
 					}
 				}
 				if storageIter.Error() != nil {
@@ -580,14 +625,30 @@ func traverseRawState(ctx *cli.Context) error {
 					log.Error("Code is missing", "account", common.BytesToHash(accIter.LeafKey()))
 					return errors.New("missing code")
 				}
+
+				alloc.Code = code
+				//newDB.Put(acc.CodeHash, code, nil)
 				codes += 1
 			}
+			allocs[address] = alloc
+
 			if time.Since(lastReport) > time.Second*8 {
 				log.Info("Traversing state", "nodes", nodes, "accounts", accounts, "slots", slots, "codes", codes, "elapsed", common.PrettyDuration(time.Since(start)))
 				lastReport = time.Now()
 			}
 		}
 	}
+	marshal, err := json.Marshal(allocs)
+	if err != nil {
+		log.Error("Failed to marshal allocs", "err", err)
+		return err
+	}
+	outputFile := "allocs.json"
+	if err := os.WriteFile(outputFile, marshal, 0644); err != nil {
+		log.Error("Failed to write allocs", "err", err)
+		return err
+	}
+
 	if accIter.Error() != nil {
 		log.Error("Failed to traverse state trie", "root", root, "err", accIter.Error())
 		return accIter.Error()
