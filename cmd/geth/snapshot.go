@@ -385,6 +385,7 @@ func verifyState(ctx *cli.Context) error {
 	}
 	log.Info("Verified the state", "root", root)
 	fmt.Println(root.Hex())
+	fmt.Println(headBlock.NumberU64(), headBlock.Number())
 	return nil
 }
 
