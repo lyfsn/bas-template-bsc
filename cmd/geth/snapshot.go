@@ -384,6 +384,7 @@ func verifyState(ctx *cli.Context) error {
 		return err
 	}
 	log.Info("Verified the state", "root", root)
+	fmt.Println(root.Hex())
 	return nil
 }
 
@@ -559,7 +560,7 @@ func traverseRawState(ctx *cli.Context) error {
 			pk := preimageKey(common.BytesToHash(accIter.LeafKey()))
 			addressValue, err := chaindb.Get(pk)
 			if err != nil {
-				log.Error("Invalid account encountered during traversal", "err", err)
+				log.Error("[2] Invalid account encountered during traversal", "err", err)
 				return errors.New("invalid account")
 			}
 			address := common.BytesToAddress(addressValue)
@@ -606,7 +607,7 @@ func traverseRawState(ctx *cli.Context) error {
 						pk := preimageKey(common.BytesToHash(storageIter.LeafKey()))
 						slotKeyValue, err := chaindb.Get(pk)
 						if err != nil {
-							log.Error("Invalid storage encountered during traversal", "err", err)
+							log.Error("[2] Invalid storage encountered during traversal", "err", err)
 							return errors.New("invalid storage")
 						}
 						slotKey := common.BytesToHash(slotKeyValue)
