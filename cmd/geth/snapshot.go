@@ -365,6 +365,16 @@ func verifyState(ctx *cli.Context) error {
 	snaptree, err := snapshot.New(chaindb, trie.NewDatabase(chaindb), 256, 128, headBlock.Root(), false, false, false)
 	if err != nil {
 		log.Error("Failed to open snapshot tree", "err", err)
+		have := "0xbc87b3b6588b8eb466e20bee316e975e354720e13f48494e66ef70d7999e2170"
+		for i := headBlock.Number().Uint64(); i > 0; i-- {
+			if headBlock = rawdb.ReadBlock(chaindb, common.Hash{}, i); headBlock != nil {
+				if have == headBlock.Root().Hex() {
+					fmt.Println("Found the block", i)
+					break
+				}
+				fmt.Println("Block", i, "root", headBlock.Root().Hex())
+			}
+		}
 		return err
 	}
 	if ctx.NArg() > 1 {
