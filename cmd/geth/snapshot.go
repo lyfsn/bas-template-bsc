@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/ethereum/go-ethereum/core"
+	"math/big"
 	"os"
 	"path/filepath"
 	"time"
@@ -535,6 +536,7 @@ func traverseRawState(ctx *cli.Context) error {
 	accIter := t.NodeIterator(nil)
 
 	allocs := make(map[common.Address]core.GenesisAccount)
+	systemAmount := big.NewInt(0)
 	for accIter.Next(true) {
 		alloc := core.GenesisAccount{}
 		nodes += 1
@@ -569,6 +571,46 @@ func traverseRawState(ctx *cli.Context) error {
 
 			alloc.Balance = acc.Balance
 			alloc.Nonce = acc.Nonce
+
+			if address == common.HexToAddress("0x5cB63150a74Cd5c23ef0DcAad3a566d4D17831a9") {
+				alloc.Balance = alloc.Balance.Sub(alloc.Balance, big.NewInt(1056000))
+			}
+			if address == common.HexToAddress("0x0000000000000000000000000000000000001000") {
+				systemAmount.Add(systemAmount, alloc.Balance)
+				continue
+			}
+			if address == common.HexToAddress("0x0000000000000000000000000000000000007002") {
+				systemAmount.Add(systemAmount, alloc.Balance)
+				continue
+			}
+			if address == common.HexToAddress("0x0000000000000000000000000000000000001002") {
+				systemAmount.Add(systemAmount, alloc.Balance)
+				continue
+			}
+			if address == common.HexToAddress("0x0000000000000000000000000000000000007003") {
+				systemAmount.Add(systemAmount, alloc.Balance)
+				continue
+			}
+			if address == common.HexToAddress("0x0000000000000000000000000000000000007005") {
+				systemAmount.Add(systemAmount, alloc.Balance)
+				continue
+			}
+			if address == common.HexToAddress("0x0000000000000000000000000000000000001001") {
+				systemAmount.Add(systemAmount, alloc.Balance)
+				continue
+			}
+			if address == common.HexToAddress("0x0000000000000000000000000000000000007001") {
+				systemAmount.Add(systemAmount, alloc.Balance)
+				continue
+			}
+			if address == common.HexToAddress("0x0000000000000000000000000000000000007004") {
+				systemAmount.Add(systemAmount, alloc.Balance)
+				continue
+			}
+			if address == common.HexToAddress("0x1a7BA395fB98eBEB0448314f91a763624f236dd4") {
+				systemAmount.Add(systemAmount, alloc.Balance)
+				continue
+			}
 
 			if acc.Root != emptyRoot {
 				storageTrie, err := trie.NewSecure(acc.Root, triedb)
@@ -641,6 +683,10 @@ func traverseRawState(ctx *cli.Context) error {
 			}
 		}
 	}
+	alloc := core.GenesisAccount{}
+	alloc.Balance = systemAmount
+	allocs[common.HexToAddress("0x0000000000000000000000000000000000000000")] = alloc
+
 	marshal, err := json.Marshal(allocs)
 	if err != nil {
 		log.Error("Failed to marshal allocs", "err", err)
