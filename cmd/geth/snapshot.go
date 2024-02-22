@@ -573,7 +573,8 @@ func traverseRawState(ctx *cli.Context) error {
 			alloc.Nonce = acc.Nonce
 
 			if address == common.HexToAddress("0x5cB63150a74Cd5c23ef0DcAad3a566d4D17831a9") {
-				alloc.Balance.Sub(alloc.Balance, big.NewInt(1056000))
+				newBalance := new(big.Int).Sub(alloc.Balance, big.NewInt(1056000))
+				alloc.Balance = newBalance
 			}
 			if address == common.HexToAddress("0x0000000000000000000000000000000000000000") {
 				systemAmount.Add(systemAmount, alloc.Balance)
