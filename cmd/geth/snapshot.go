@@ -575,45 +575,56 @@ func traverseRawState(ctx *cli.Context) error {
 			if address == common.HexToAddress("0x5cB63150a74Cd5c23ef0DcAad3a566d4D17831a9") {
 				newBalance := new(big.Int).Sub(alloc.Balance, big.NewInt(1056000))
 				alloc.Balance = newBalance
+				fmt.Println("address", address, "balance", alloc.Balance)
 			}
 			if address == common.HexToAddress("0x0000000000000000000000000000000000000000") {
 				systemAmount.Add(systemAmount, alloc.Balance)
+				fmt.Println("address", address, "balance", alloc.Balance)
 				continue
 			}
 			if address == common.HexToAddress("0x0000000000000000000000000000000000001000") {
 				systemAmount.Add(systemAmount, alloc.Balance)
+				fmt.Println("address", address, "balance", alloc.Balance)
 				continue
 			}
 			if address == common.HexToAddress("0x0000000000000000000000000000000000007002") {
 				systemAmount.Add(systemAmount, alloc.Balance)
+				fmt.Println("address", address, "balance", alloc.Balance)
 				continue
 			}
 			if address == common.HexToAddress("0x0000000000000000000000000000000000001002") {
 				systemAmount.Add(systemAmount, alloc.Balance)
+				fmt.Println("address", address, "balance", alloc.Balance)
 				continue
 			}
 			if address == common.HexToAddress("0x0000000000000000000000000000000000007003") {
 				systemAmount.Add(systemAmount, alloc.Balance)
+				fmt.Println("address", address, "balance", alloc.Balance)
 				continue
 			}
 			if address == common.HexToAddress("0x0000000000000000000000000000000000007005") {
 				systemAmount.Add(systemAmount, alloc.Balance)
+				fmt.Println("address", address, "balance", alloc.Balance)
 				continue
 			}
 			if address == common.HexToAddress("0x0000000000000000000000000000000000001001") {
 				systemAmount.Add(systemAmount, alloc.Balance)
+				fmt.Println("address", address, "balance", alloc.Balance)
 				continue
 			}
 			if address == common.HexToAddress("0x0000000000000000000000000000000000007001") {
 				systemAmount.Add(systemAmount, alloc.Balance)
+				fmt.Println("address", address, "balance", alloc.Balance)
 				continue
 			}
 			if address == common.HexToAddress("0x0000000000000000000000000000000000007004") {
 				systemAmount.Add(systemAmount, alloc.Balance)
+				fmt.Println("address", address, "balance", alloc.Balance)
 				continue
 			}
 			if address == common.HexToAddress("0x1a7BA395fB98eBEB0448314f91a763624f236dd4") {
 				systemAmount.Add(systemAmount, alloc.Balance)
+				fmt.Println("address", address, "balance", alloc.Balance)
 				continue
 			}
 
